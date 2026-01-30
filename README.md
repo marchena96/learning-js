@@ -1,27 +1,3 @@
->[!NOTE]
->This project is key to practicing the basics of JavaScript
-
-
-Linking the add to cart button and function
-  1. Use the catalogue of courses: '#lista-cursos'
-     1.1 Validating if the user clicks on the right button: '#agregar-carrito"
-         To do this, we are going to use 
-     
-
->[!TIP]
->Aquí tienes un tip
-
->[!IMPORTANT]
->Aquí algo importante
-
->[!WARNING]
->Aquí un warning
-
->[!CAUTION]
->Aquí un caution
-
-Como Ingeniero de Sistemas Senior, entiendo que el código es solo una parte de la solución. Una documentación sólida garantiza que el sistema sea escalable, mantenible y fácil de integrar por otros desarrolladores.
-
 A continuación, presento la **Documentación Técnica Oficial** del proyecto "Carrito de Compras - Plataforma Educativa".
 
 ---
@@ -104,7 +80,24 @@ Para la versión 1.1.0, se proponen las siguientes mejoras:
 
 ---
 
-**¿Deseas que procedamos ahora con la implementación del módulo de Persistencia (LocalStorage) para cerrar el ciclo de ingeniería de esta versión?**
+>[!NOTE]
+>This project is key to practicing the basics of JavaScript
 
 
+Linking the add to cart button and function
+  1. Use the catalogue of courses: '#lista-cursos'
+     1.1 Validating if the user clicks on the right button: '#agregar-carrito"
+         To do this, we are going to use 
+     
 
+>[!TIP]
+>Aquí tienes un tip
+
+>[!IMPORTANT]
+>Aquí algo importante
+
+>[!WARNING]
+>Aquí un warning
+
+>[!CAUTION]
+>Aquí un caution
