@@ -32,39 +32,45 @@ function addToCart(e) {
 // 2.1 Function to retrieve data from each course
 function retrieveCourseData(course) {
 
-  //Object: Course
+  // 1. Crear el objeto con la información del curso actual
   const courseData = {
     image: course.querySelector('img').src,
     title: course.querySelector('h4').textContent,
     price: course.querySelector('.price span').textContent,
-    //FLEXIBILIDAD: Buscamos el data-id en el elemento
     id: course.querySelector('.agregar-carrito').getAttribute('data-id'),
     quantity: 1
   }
 
-  // Revisa si el elemento ya existe en el carrito
+  // 2. Revisar si el elemento ya existe en el carrito (.some solo devuelve true/false)
   const isExisting = shoppingCart.some(course => course.id === courseData.id);
+
   if (isExisting) {
+    // ACTUALIZAMOS LA CANTIDAD
+    // Usamos .map para crear un NUEVO arreglo (inmutabilidad)
     const courses = shoppingCart.map(course => {
       if (course.id === courseData.id) {
-        course.quantity++;
-        return course;
+        // Retornamos una copia del objeto sumando 1 a la cantidad
+        // Esta es la forma "Senior" de evitar mutar el objeto original directamente
+        return {
+          ...course,  // Copia las propiedades existentes (img, title, etc)
+          quantity: course.quantity + 1 // Sobrescribe solo la cantidad
+        }
       } else {
         return course;
       }
     })
 
+    // Asignamos el nuevo arreglo al carrito
     shoppingCart = [...courses];
 
   } else {
-    // Add item to the cart
+    // AGREGAMOS EL CURSO NUEVO
+    // Si no existe, simplemente lo agregamos al arreglo
     shoppingCart = [...shoppingCart, courseData];
   }
 
-
   console.log(shoppingCart);
   htmlCart();
-
 
 }
 
@@ -74,11 +80,11 @@ function retrieveCourseData(course) {
 // * 1. Muestra el carrito de compras en el html * Esta función se manda a llamar después de leer los datos del curso y agregarlos al carrito
 function htmlCart() {
 
-  cleanHTML();
+  cleanHTML();  // Limpia el HTML antes de repintar
 
   shoppingCart.forEach(course => {
-
-    const { image, title, price, quantity } = course;
+    // CORRECCIÓN: Agregamos 'id' aquí para poder usarlo abajo
+    const { image, title, price, quantity, id } = course;
     const row = document.createElement('tr');
 
     row.innerHTML = `
@@ -89,7 +95,7 @@ function htmlCart() {
         <td> ${price}</td>
         <td> ${quantity}</td>
         <td> 
-            <a href="#" class=borrar-curso data-id="{id}"> X </a> 
+            <a href="#" class=borrar-curso data-id="${id}"> X </a> 
       `;
 
     cartContainer.appendChild(row);
@@ -99,7 +105,7 @@ function htmlCart() {
 
 // * Clean the preview content of the cart
 function cleanHTML() {
-  while (shoppingCart.firstChild) {
-    shoppingCart.removeChild(shoppingCart.firstChild);
+  while (cartContainer.firstChild) {
+    cartContainer.removeChild(cartContainer.firstChild);
   }
 }
