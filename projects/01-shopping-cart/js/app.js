@@ -62,15 +62,22 @@ function htmlCart() {
 
   // Recorrer el carrito y generar el HTML
   shoppingCart.forEach(course => {
+
+    const { image, title, price, quantity } = course;
     const row = document.createElement('tr');
+
     row.innerHTML = `
-        <td> ${course.title}</td>
-        <td> ${course.image}</td>    <!-- This way to pick the img it's making an error -->
-        <td> ${course.price}</td>
-        <td> ${course.quantity}</td>
+        <td>
+            <img src="${image}" width="100"> 
+        </td> 
+        <td> ${title}</td>
+        <td> ${price}</td>
+        <td> ${quantity}</td>
+        <td> 
+            <a href="#" class=borrar-curso data-id="{id}"> X </a> 
       `;
 
-    // Agregar el html del carrito en el tbody
+    // Renderizar el html del carrito en el tbody
     //* 👀 ESTE ES EL LUGAR CORRECTO. Dentro de la función que que escribe en el tbody.
     cartContainer.appendChild(row);
   });
