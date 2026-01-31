@@ -42,13 +42,29 @@ function retrieveCourseData(course) {
     quantity: 1
   }
 
-  // Add elements to shoppingCart array
-  // Se hace spread operator y nos traemos el objeto curso 'courseData'
-  shoppingCart = [...shoppingCart, courseData];
+  // Revisa si el elemento ya existe en el carrito
+  const isExisting = shoppingCart.some(course => course.id === courseData.id);
+  if (isExisting) {
+    const courses = shoppingCart.map(course => {
+      if (course.id === courseData.id) {
+        course.quantity++;
+        return course;
+      } else {
+        return course;
+      }
+    })
+
+    shoppingCart = [...courses];
+
+  } else {
+    // Add item to the cart
+    shoppingCart = [...shoppingCart, courseData];
+  }
+
 
   console.log(shoppingCart);
-
   htmlCart();
+
 
 }
 
@@ -57,10 +73,9 @@ function retrieveCourseData(course) {
 
 // * 1. Muestra el carrito de compras en el html * Esta función se manda a llamar después de leer los datos del curso y agregarlos al carrito
 function htmlCart() {
-  // ...
+
   cleanHTML();
 
-  // Recorrer el carrito y generar el HTML
   shoppingCart.forEach(course => {
 
     const { image, title, price, quantity } = course;
@@ -77,11 +92,9 @@ function htmlCart() {
             <a href="#" class=borrar-curso data-id="{id}"> X </a> 
       `;
 
-    // Renderizar el html del carrito en el tbody
-    //* 👀 ESTE ES EL LUGAR CORRECTO. Dentro de la función que que escribe en el tbody.
     cartContainer.appendChild(row);
-  });
 
+  });
 }
 
 // * Clean the preview content of the cart
