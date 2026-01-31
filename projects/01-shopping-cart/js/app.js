@@ -54,8 +54,8 @@ function retrieveCourseData(course) {
 
 
 // * SPECIAL FUNCTIONS SECTION *  
-// * 1. Muestra el carrito de compras en el html * Esta función se manda a llamar después de leer los datos del curso y agregarlos al carrito
 
+// * 1. Muestra el carrito de compras en el html * Esta función se manda a llamar después de leer los datos del curso y agregarlos al carrito
 function htmlCart() {
   // ...
   cleanHTML();
@@ -64,15 +64,16 @@ function htmlCart() {
   shoppingCart.forEach(course => {
     const row = document.createElement('tr');
     row.innerHTML = `
-      <td> ${course.title}</td>
-    `;
+        <td> ${course.title}</td>
+        <td> ${course.image}</td>    <!-- This way to pick the img it's making an error -->
+        <td> ${course.price}</td>
+        <td> ${course.quantity}</td>
+      `;
 
+    // Agregar el html del carrito en el tbody
+    //* 👀 ESTE ES EL LUGAR CORRECTO. Dentro de la función que que escribe en el tbody.
+    cartContainer.appendChild(row);
   });
-
-
-  // Agregar el html del carrito en el tbody
-  //! 👀 ESTOY PONIENDOLO FUERA; 
-  cartContainer.appendChild(row);
 
 }
 
