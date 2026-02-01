@@ -9,14 +9,31 @@ const COURSE_CATALOGUE = document.querySelector('#lista-cursos');
 // 
 let shoppingCart = [];
 
-// 1.Implement Event Delegation to handle click on dynamic list items
+// 1.Implement Event Delegation to handle clicks on dynamic list items
 loadEventListeners();
+
 function loadEventListeners() {
+
+  // DOM elements
   COURSE_CATALOGUE.addEventListener('click', addToCart);
   cart.addEventListener('click', deleteItem);
   CLEAN_CART_BTN.addEventListener('click', cleanCart);
-}
 
+  // NEW: Cargar carrito al iniciar la app con protección try/catch
+  document.addEventListener('DOMContentLoaded', () => {
+    try {
+      // Intentamos obtener los datos; si no existen, inicializamos como arreglo vacío []
+      shoppingCart = JSON.parse(localStorage.getItem('carrito')) || [];
+
+      console.table(shoppingCart);
+      htmlCart();
+
+    } catch (error) {
+      console.error('Error al leer LocalStorage:', error);
+      shoppingCart = []; // Fallback seguro ante datos corrompidos
+    }
+  })
+}
 
 // * FUNCTIONS *
 // ADD ITEMS TO THE CART
@@ -27,6 +44,8 @@ function addToCart(e) {
     // ROBUSTEZ: Buscamos el ancestro .card más cercano, sin importar la jerarquía
     const selectedCourse = e.target.closest('.card');
     retrieveCourseData(selectedCourse);
+
+    console.table(shoppingCart);
 
   }
 }
@@ -74,39 +93,34 @@ function retrieveCourseData(course) {
   console.log(shoppingCart);
   htmlCart();
 
+  // ...
+  syncStorage();
+
 }
 
 // DELETE ITEMS FROM THE CART
 function deleteItem(e) {
-
   if (e.target.classList.contains('borrar-curso')) {
-
-    // GET: data-id
     const idCourse = e.target.getAttribute('data-id');
 
-    // Delete element of the array by id
+    // Filtramos el array
     shoppingCart = shoppingCart.filter(course => course.id !== idCourse);
+    console.table(shoppingCart);
 
-    // Call htmlCart
-    htmlCart();
-
-
+    htmlCart();   // Actualizamos la vista
+    syncStorage();    //NUEVO: Guardamos cambios en LocalStorage
   }
 }
 
 // CLEAN CART
 function cleanCart() {
 
-  // Clean the array
-  shoppingCart = [];
+  shoppingCart = [];    // Clean the array
+  cleanHTML();    // Clean the HTML
 
-  // Clean the HTML
-  cleanHTML();
-
-  // Display that all is ok
-  console.log(shoppingCart);
+  syncStorage();
+  console.log(shoppingCart);    // Display that all is ok
 }
-
 
 // * SPECIAL FUNCTIONS SECTION *  
 // * 1. Muestra el carrito de compras en el html * Esta función se manda a llamar después de leer los datos del curso y agregarlos al carrito
@@ -140,4 +154,20 @@ function cleanHTML() {
   while (cartContainer.firstChild) {
     cartContainer.removeChild(cartContainer.firstChild);
   }
+}
+
+// * Escribe en el disco del navegador
+function syncStorage() {
+
+  try {
+    localStorage.setItem('carrito', JSON.stringify(shoppingCart));
+  } catch (error) {
+    console.error('No se pudo guardar en LocalStorage', error);
+  }
+
+  /* This function will be called just after the array has changed.
+      Debes agregarla en estos 3 lugares de tu código actual:
+          En retrieveCourseData: Después de htmlCart();.
+          En deleteItem: Después de filtrar el arreglo y llamar a htmlCart();.
+          En cleanCart: Después de vaciar el arreglo y limpiar el HTML.    */
 }
