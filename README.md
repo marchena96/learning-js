@@ -101,3 +101,12 @@ Linking the add to cart button and function
 
 >[!CAUTION]
 >Aquí un caution
+>
+
+### FUNCIONALIDAD ACTUAL 
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/cec9585b-ba94-487f-b451-c6f05ce8a918" />
+
+CRUD completo
+Falta implemetar funcionalidad al botón para incrementar o decrementar las cantidades de cada producto
+Agregar notificaciones: antes de borrar, luego de agregar, editar y ese tipo.
+
