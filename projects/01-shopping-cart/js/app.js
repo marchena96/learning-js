@@ -1,271 +1,181 @@
-// 1. Initialize variables to reference DOM elements.
-const cart = document.querySelector('#carrito');
-const cartContainer = document.querySelector('#lista-carrito tbody');
-const CLEAN_CART_BTN = document.querySelector('#vaciar-carrito');
-const COURSE_CATALOGUE = document.querySelector('#lista-cursos');
+/**
+ * 01-SHOPPING-CART - REFACTORIZACIÓN FINAL
+ * Arquitectura: Layered (UI, Business Actions, Infrastructure)
+ * Principios: Loose Coupling (Acoplamiento Débil) y SRP.
+ */
 
-// Step 3: Create an array that will works as the cart
-// Este array se va a ir llenando con 'cursos' que es el objeto que estamos usando 
-// 
+// --- 1. CONFIGURACIÓN DE SELECTORES (Capa de Interfaz) ---
+const selectors = {
+  cart: document.querySelector('#carrito'),
+  cartContainer: document.querySelector('#lista-carrito tbody'),
+  cleanCartBtn: document.querySelector('#vaciar-carrito'),
+  courseCatalogue: document.querySelector('#lista-cursos'),
+  totalDisplay: document.querySelector('#total-pagar') // Coincide con el aria-live="polite"
+};
+
+// --- 2. ESTADO GLOBAL ---
 let shoppingCart = [];
 
-// 1.Implement Event Delegation to handle clicks on dynamic list items
-loadEventListeners();
-
-function loadEventListeners() {
-
-  // DOM elements
-  COURSE_CATALOGUE.addEventListener('click', addToCart);
-  cart.addEventListener('click', deleteItem);
-  CLEAN_CART_BTN.addEventListener('click', cleanCart);
-
-  // NEW: Cargar carrito al iniciar la app con protección try/catch
-  document.addEventListener('DOMContentLoaded', () => {
+// --- 3. INFRAESTRUCTURA (Persistencia Local) ---
+const storage = {
+  save(data) {
     try {
-      // Intentamos obtener los datos; si no existen, inicializamos como arreglo vacío []
-      shoppingCart = JSON.parse(localStorage.getItem('carrito')) || [];
-
-      console.table(shoppingCart);
-      htmlCart();
-
-    } catch (error) {
-      console.error('Error al leer LocalStorage:', error);
-      shoppingCart = []; // Fallback seguro ante datos corrompidos
+      localStorage.setItem('carrito', JSON.stringify(data));
+    } catch (e) {
+      console.error('Error de persistencia:', e);
     }
-  })
-}
-
-// * FUNCTIONS *
-// ADD ITEMS TO THE CART
-function addToCart(e) {
-  if (e.target.classList.contains('agregar-carrito')) {
-
-    // Retrieve data from the course object...Looking for the closest element
-    // ROBUSTEZ: Buscamos el ancestro .card más cercano, sin importar la jerarquía
-    const selectedCourse = e.target.closest('.card');
-    retrieveCourseData(selectedCourse);
-
-    console.table(shoppingCart);
-
-  }
-}
-
-// RETRIEVE DATA FOR EACH COURSE
-function retrieveCourseData(course) {
-
-  // 1. Crear el objeto con la información del curso actual
-  const courseData = {
-    image: course.querySelector('img').getAttribute('src'),
-    title: course.querySelector('h4').textContent,
-    price: course.querySelector('.price span').textContent,
-    id: course.querySelector('.agregar-carrito').getAttribute('data-id'),
-    quantity: 1
-  }
-
-  // 2. Revisar si el elemento ya existe en el carrito (.some solo devuelve true/false)
-  const isExisting = shoppingCart.some(course => course.id === courseData.id);
-
-  if (isExisting) {
-    // ACTUALIZAMOS LA CANTIDAD
-    // Usamos .map para crear un NUEVO arreglo (inmutabilidad)
-    const courses = shoppingCart.map(course => {
-      if (course.id === courseData.id) {
-        // Retornamos una copia del objeto sumando 1 a la cantidad
-        // Esta es la forma "Senior" de evitar mutar el objeto original directamente
-        return {
-          ...course,  // Copia las propiedades existentes (img, title, etc)
-          quantity: course.quantity + 1 // Sobrescribe solo la cantidad
-        }
-      } else {
-        return course;
-      }
-    })
-
-    // Asignamos el nuevo arreglo al carrito
-    shoppingCart = [...courses];
-
-  } else {
-    // AGREGAMOS EL CURSO NUEVO
-    // Si no existe, simplemente lo agregamos al arreglo
-    shoppingCart = [...shoppingCart, courseData];
-  }
-
-  console.log(shoppingCart);
-
-  htmlCart();
-  syncStorage();
-
-  // NUEVO: Feedback visual para el usuario
-  showNotification(`¡${courseData.title} agregado correctamente!`);
-
-}
-
-// DELETE ITEMS FROM THE CART
-function deleteItem(e) {
-  if (e.target.classList.contains('borrar-curso')) {
-    // 1. UX Preventiva
-    if (confirm('¿Estás seguro de que deseas eliminar este elemento?')) {
-      try {
-        const idCourse = e.target.getAttribute('data-id');
-
-        // 2. Filtrado inmutable
-        shoppingCart = shoppingCart.filter(course => course.id !== idCourse);
-
-        // 3. Sync and update
-        syncStorage();
-        htmlCart(); // Actualiza la vista y el total automáticamente
-
-        // 4. Feedbak visual al usuario
-        showNotification('Elemento eliminado correctamente');
-
-        console.log(`Curso con ID ${idCourse} borrado con éxito`);
-
-      } catch (error) {
-        console.error('Error al intentar eliminar el curso:', error);
-        showNotification('No se pudo eliminar el curso');
-      }
-
-
-
-
-      // 2. Feedback visual
-      showNotification('Elemento eliminado correctamente');
-
-      // 3. El total se actualizará a $0.00 automáticamente 
-      // porque htmlCart llama a calculateTotal
-      htmlCart();
-
-      console.log('Elemento borrado con exito!');
-
+  },
+  load() {
+    try {
+      return JSON.parse(localStorage.getItem('carrito')) || [];
+    } catch (e) {
+      return [];
     }
   }
-}
+};
 
-// CLEAN CART
-function cleanCart() {
-  // 1. Preguntamos al usuario (UX Preventiva)
-  if (confirm('¿Estás seguro de que deseas vaciar todo el carrito?')) {
+// --- 4. CAPA DE PRESENTACIÓN (UI Logic) ---
+const ui = {
+  renderCart(cartItems) {
+    this.cleanView();
 
-    shoppingCart = [];    // Clean the array
-    cleanHTML();    // Clean the HTML
-    syncStorage();    // Display that all is ok
-
-    // 2. Feedback visual
-    showNotification('El carrito se ha vaciado correctamente');
-
-    // 3. El total se actualizará a $0.00 automáticamente 
-    // porque htmlCart llama a calculateTotal
-    htmlCart();
-
-    console.log('Carrito vaciado con éxito')
-  }
-}
-
-// * SPECIAL FUNCTIONS SECTION * 
-// * 1. Muestra el carrito de compras en el html
-function htmlCart() {
-  try {
-    cleanHTML();  // Limpia el HTML antes de repintar
-    shoppingCart.forEach(course => {
-      // CORRECCIÓN: Agregamos 'id' aquí para poder usarlo abajo
+    cartItems.forEach(course => {
       const { image, title, price, quantity, id } = course;
       const row = document.createElement('tr');
-
+      // Nota: Se agregaron scope="row" y cierres de etiquetas para accesibilidad
       row.innerHTML = `
-        <td>
-            <img src="${image}" width="100"> 
-        </td> 
-        <td> ${title}</td>
-        <td> ${price}</td>
-        <td> ${quantity}</td>
-        <td> 
-            <button type="button" class = borrar-curso data-id="${id}"> X </button> 
-        </td> `;
-
-      cartContainer.appendChild(row);
+                <td><img src="${image}" width="100" alt="${title}"></td> 
+                <td>${title}</td>
+                <td>${price}</td>
+                <td>${quantity}</td>
+                <td><a href="#" class="borrar-curso" data-id="${id}" aria-label="Eliminar ${title}"> X </a></td>
+            `;
+      selectors.cartContainer.appendChild(row);
     });
 
-    // NUEVO: Recalculamos el total cada vez que se repinta la tabla
-    calculateTotal();
+    this.renderTotal(cartItems);
+  },
 
-  } catch (error) {
-    console.error('Error al renderizar el carrito:', error);
+  renderTotal(cartItems) {
+    const total = cartItems.reduce((acc, item) => {
+      // Sanitización del precio para el cálculo matemático
+      const price = parseFloat(item.price.replace('$', ''));
+      return acc + (price * item.quantity);
+    }, 0);
+
+    if (selectors.totalDisplay) {
+      selectors.totalDisplay.textContent = `$${total.toFixed(2)}`;
+    }
+  },
+
+  cleanView() {
+    while (selectors.cartContainer.firstChild) {
+      selectors.cartContainer.removeChild(selectors.cartContainer.firstChild);
+    }
+  },
+
+  showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.classList.add('vacio');
+    notification.textContent = message;
+    notification.setAttribute('role', 'alert'); // ARIA para notificaciones dinámicas
+
+    Object.assign(notification.style, {
+      position: 'fixed', top: '20px', right: '20px', zIndex: '1000',
+      backgroundColor: type === 'success' ? '#2ecc71' : '#e74c3c',
+      padding: '15px 30px', borderRadius: '5px', color: 'white', fontWeight: 'bold',
+      boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+    });
+
+    document.body.appendChild(notification);
+    setTimeout(() => {
+      notification.style.opacity = '0';
+      notification.style.transition = 'opacity 0.5s ease';
+      setTimeout(() => notification.remove(), 500);
+    }, 2000);
   }
+};
 
-}
+// --- 5. LÓGICA DE NEGOCIO (Domain Actions) ---
+const actions = {
+  addCourse(courseElement) {
+    try {
+      const courseData = {
+        // Selector robusto: busca la clase .imagen-curso que pusimos en el HTML
+        image: courseElement.querySelector('.imagen-curso').getAttribute('src'),
+        title: courseElement.querySelector('h4').textContent,
+        price: courseElement.querySelector('.price span').textContent,
+        id: courseElement.querySelector('.agregar-carrito').getAttribute('data-id'),
+        quantity: 1
+      };
 
-// * Clean the preview content of the cart
-function cleanHTML() {
-  while (cartContainer.firstChild) {
-    cartContainer.removeChild(cartContainer.firstChild);
+      const exists = shoppingCart.some(item => item.id === courseData.id);
+
+      if (exists) {
+        shoppingCart = shoppingCart.map(item =>
+          item.id === courseData.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      } else {
+        shoppingCart = [...shoppingCart, courseData];
+      }
+
+      this.syncApp();
+      ui.showNotification(`Curso añadido: ${courseData.title}`);
+    } catch (e) {
+      console.error("Fallo en la captura de datos del curso", e);
+    }
+  },
+
+  removeCourse(id) {
+    if (confirm('¿Desea eliminar este curso del carrito?')) {
+      shoppingCart = shoppingCart.filter(item => item.id !== id);
+      this.syncApp();
+      ui.showNotification('Curso removido', 'error');
+    }
+  },
+
+  clearCart() {
+    if (confirm('¿Está seguro de vaciar todo el carrito?')) {
+      shoppingCart = [];
+      this.syncApp();
+      ui.showNotification('Carrito vaciado');
+    }
+  },
+
+  syncApp() {
+    storage.save(shoppingCart);
+    ui.renderCart(shoppingCart);
   }
+};
+
+// --- 6. INICIALIZADOR (Controlador de Eventos) ---
+function initApp() {
+  document.addEventListener('DOMContentLoaded', () => {
+    shoppingCart = storage.load();
+    ui.renderCart(shoppingCart);
+  });
+
+  selectors.courseCatalogue.addEventListener('click', (e) => {
+    if (e.target.classList.contains('agregar-carrito')) {
+      const courseCard = e.target.closest('.card');
+      actions.addCourse(courseCard);
+    }
+  });
+
+  selectors.cart.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (e.target.classList.contains('borrar-curso')) {
+      const id = e.target.getAttribute('data-id');
+      actions.removeCourse(id);
+    }
+  });
+
+  selectors.cleanCartBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    actions.clearCart();
+  });
 }
 
-// * Escribe en el disco del navegador
-function syncStorage() {
-
-  try {
-    localStorage.setItem('carrito', JSON.stringify(shoppingCart));
-  } catch (error) {
-    console.error('No se pudo guardar en LocalStorage', error);
-  }
-
-  /* This function will be called just after the array has changed.
-      Debes agregarla en estos 3 lugares de tu código actual:
-          En retrieveCourseData: Después de htmlCart();.
-          En deleteItem: Después de filtrar el arreglo y llamar a htmlCart();.
-          En cleanCart: Después de vaciar el arreglo y limpiar el HTML.    */
-}
-
-//* TOTAL A PAGAR
-function calculateTotal() {
-  // reduce toma dos argumentos: una función acumuladora y el valor inicial (0)
-  const TOTAL = shoppingCart.reduce((sumarizedTotal, course) => {
-    // 1. Limpiamos el precio: "$15" -> "15" -> 15.00
-    // Nota: Si tus precios tienen comas (ej: 1,000), habría que quitarlas también.
-    const numberPrice = parseFloat(course.price.replace('$', ''));
-
-    // 2. Sumamos al acumulado: Precio * Cantidad
-    return sumarizedTotal + (numberPrice * course.quantity);
-  }, 0);
-
-  // 3. Mostramos el resultado en el HTML
-  const displayTotal = document.querySelector('#total-pagar');
-
-  // Verificamos que el elemento exista para evitar errores (Blindaje)
-  if (displayTotal) {
-    // .toFixed(2) asegura que siempre se vean 2 decimales (ej: 15.50)
-    displayTotal.textContent = `$${TOTAL.toFixed(2)}`;
-  }
-}
-
-// Muestra una notificación personalizada
-function showNotification(message) {
-  // 1. Crear el elemento
-  const notification = document.createElement('div');
-  notification.classList.add('vacio'); // Reutilizamos tu clase roja o creamos una nueva
-  notification.textContent = message;
-
-  // Estilos rápidos para que parezca un "Toast" flotante
-  notification.style.position = 'fixed';
-  notification.style.top = '20px';
-  notification.style.right = '20px';
-  notification.style.zIndex = '1000';
-  notification.style.backgroundColor = '#2ecc71'; // Verde éxito
-  notification.style.padding = '15px 30px';
-  notification.style.borderRadius = '5px';
-  notification.style.color = 'white';
-  notification.style.fontWeight = 'bold';
-  notification.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
-
-  // 2. Insertar en el body
-  document.body.appendChild(notification);
-
-  // 3. Eliminar después de 2.5 segundos con una pequeña transición
-  setTimeout(() => {
-    notification.style.opacity = '0';
-    notification.style.transition = 'opacity 0.5s ease';
-    setTimeout(() => notification.remove(), 500);
-  }, 2500);
-}
-
+initApp();
