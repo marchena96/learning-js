@@ -13,11 +13,12 @@ let shoppingCart = [];
 loadEventListeners();
 function loadEventListeners() {
   COURSE_CATALOGUE.addEventListener('click', addToCart);
+  cart.addEventListener('click', deleteItem);
 }
 
 
-// Functions
-// 2. Validation of the clicked button
+// * FUNCTIONS *
+// ADD ITEMS TO THE CART
 function addToCart(e) {
   if (e.target.classList.contains('agregar-carrito')) {
 
@@ -29,7 +30,7 @@ function addToCart(e) {
   }
 }
 
-// 2.1 Function to retrieve data from each course
+// RETRIEVE DATA FOR EACH COURSE
 function retrieveCourseData(course) {
 
   // 1. Crear el objeto con la información del curso actual
@@ -74,6 +75,15 @@ function retrieveCourseData(course) {
 
 }
 
+// DELETE ITEMS FROM THE CART
+function deleteItem(e) {
+
+  if (e.target.classList.contains('borrar-curso')) {
+    console.log(e.target.getAttribute('data-id'));
+  }
+}
+
+
 // * SPECIAL FUNCTIONS SECTION *  
 // * 1. Muestra el carrito de compras en el html * Esta función se manda a llamar después de leer los datos del curso y agregarlos al carrito
 function htmlCart() {
@@ -93,7 +103,7 @@ function htmlCart() {
         <td> ${price}</td>
         <td> ${quantity}</td>
         <td> 
-            <a href="#" class=borrar-curso data-id="${id}"> X </a> 
+            <a href="#" class = borrar-curso data-id="${id}"> X </a> 
       `;
 
     cartContainer.appendChild(row);
