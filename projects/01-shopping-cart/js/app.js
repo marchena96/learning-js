@@ -14,6 +14,7 @@ loadEventListeners();
 function loadEventListeners() {
   COURSE_CATALOGUE.addEventListener('click', addToCart);
   cart.addEventListener('click', deleteItem);
+  CLEAN_CART_BTN.addEventListener('click', cleanCart);
 }
 
 
@@ -79,8 +80,31 @@ function retrieveCourseData(course) {
 function deleteItem(e) {
 
   if (e.target.classList.contains('borrar-curso')) {
-    console.log(e.target.getAttribute('data-id'));
+
+    // GET: data-id
+    const idCourse = e.target.getAttribute('data-id');
+
+    // Delete element of the array by id
+    shoppingCart = shoppingCart.filter(course => course.id !== idCourse);
+
+    // Call htmlCart
+    htmlCart();
+
+
   }
+}
+
+// CLEAN CART
+function cleanCart() {
+
+  // Clean the array
+  shoppingCart = [];
+
+  // Clean the HTML
+  cleanHTML();
+
+  // Display that all is ok
+  console.log(shoppingCart);
 }
 
 
