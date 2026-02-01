@@ -122,18 +122,19 @@ function cleanCart() {
   console.log(shoppingCart);    // Display that all is ok
 }
 
-// * SPECIAL FUNCTIONS SECTION *  
-// * 1. Muestra el carrito de compras en el html * Esta función se manda a llamar después de leer los datos del curso y agregarlos al carrito
+// * SPECIAL FUNCTIONS SECTION * 
+// * 1. Muestra el carrito de compras en el html
 function htmlCart() {
 
-  cleanHTML();  // Limpia el HTML antes de repintar
 
-  shoppingCart.forEach(course => {
-    // CORRECCIÓN: Agregamos 'id' aquí para poder usarlo abajo
-    const { image, title, price, quantity, id } = course;
-    const row = document.createElement('tr');
+  try {
+    cleanHTML();  // Limpia el HTML antes de repintar
+    shoppingCart.forEach(course => {
+      // CORRECCIÓN: Agregamos 'id' aquí para poder usarlo abajo
+      const { image, title, price, quantity, id } = course;
+      const row = document.createElement('tr');
 
-    row.innerHTML = `
+      row.innerHTML = `
         <td>
             <img src="${image}" width="100"> 
         </td> 
@@ -144,9 +145,16 @@ function htmlCart() {
             <a href="#" class = borrar-curso data-id="${id}"> X </a> 
       `;
 
-    cartContainer.appendChild(row);
+      cartContainer.appendChild(row);
+    });
 
-  });
+    // NUEVO: Recalculamos el total cada vez que se repinta la tabla
+    calculateTotal();
+
+  } catch (error) {
+    console.error('Error al renderizar el carrito:', error);
+  }
+
 }
 
 // * Clean the preview content of the cart
@@ -170,4 +178,26 @@ function syncStorage() {
           En retrieveCourseData: Después de htmlCart();.
           En deleteItem: Después de filtrar el arreglo y llamar a htmlCart();.
           En cleanCart: Después de vaciar el arreglo y limpiar el HTML.    */
+}
+
+//* TOTAL A PAGAR
+function calculateTotal() {
+  // reduce toma dos argumentos: una función acumuladora y el valor inicial (0)
+  const TOTAL = shoppingCart.reduce((sumarizedTotal, course) => {
+    // 1. Limpiamos el precio: "$15" -> "15" -> 15.00
+    // Nota: Si tus precios tienen comas (ej: 1,000), habría que quitarlas también.
+    const numberPrice = parseFloat(course.price.replace('$', ''));
+
+    // 2. Sumamos al acumulado: Precio * Cantidad
+    return sumarizedTotal + (price * course.quantity);
+  }, 0);
+
+  // 3. Mostramos el resultado en el HTML
+  const displayTotal = document.querySelector('#total-pagar');
+
+  // Verificamos que el elemento exista para evitar errores (Blindaje)
+  if (displayTotal) {
+    // .toFixed(2) asegura que siempre se vean 2 decimales (ej: 15.50)
+    displayTotal.textContent = `$${TOTAL.toFixed(2)}`;
+  }
 }
