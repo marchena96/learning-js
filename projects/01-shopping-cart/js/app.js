@@ -34,7 +34,7 @@ function retrieveCourseData(course) {
 
   // 1. Crear el objeto con la información del curso actual
   const courseData = {
-    image: course.querySelector('img').src,
+    image: course.querySelector('img').getAttribute('src'),
     title: course.querySelector('h4').textContent,
     price: course.querySelector('.price span').textContent,
     id: course.querySelector('.agregar-carrito').getAttribute('data-id'),
@@ -74,9 +74,7 @@ function retrieveCourseData(course) {
 
 }
 
-
 // * SPECIAL FUNCTIONS SECTION *  
-
 // * 1. Muestra el carrito de compras en el html * Esta función se manda a llamar después de leer los datos del curso y agregarlos al carrito
 function htmlCart() {
 
