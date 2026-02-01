@@ -91,42 +91,79 @@ function retrieveCourseData(course) {
   }
 
   console.log(shoppingCart);
-  htmlCart();
 
-  // ...
+  htmlCart();
   syncStorage();
+
+  // NUEVO: Feedback visual para el usuario
+  showNotification(`¡${courseData.title} agregado correctamente!`);
 
 }
 
 // DELETE ITEMS FROM THE CART
 function deleteItem(e) {
   if (e.target.classList.contains('borrar-curso')) {
-    const idCourse = e.target.getAttribute('data-id');
+    // 1. UX Preventiva
+    if (confirm('¿Estás seguro de que deseas eliminar este elemento?')) {
+      try {
+        const idCourse = e.target.getAttribute('data-id');
 
-    // Filtramos el array
-    shoppingCart = shoppingCart.filter(course => course.id !== idCourse);
-    console.table(shoppingCart);
+        // 2. Filtrado inmutable
+        shoppingCart = shoppingCart.filter(course => course.id !== idCourse);
 
-    htmlCart();   // Actualizamos la vista
-    syncStorage();    //NUEVO: Guardamos cambios en LocalStorage
+        // 3. Sync and update
+        syncStorage();
+        htmlCart(); // Actualiza la vista y el total automáticamente
+
+        // 4. Feedbak visual al usuario
+        showNotification('Elemento eliminado correctamente');
+
+        console.log(`Curso con ID ${idCourse} borrado con éxito`);
+
+      } catch (error) {
+        console.error('Error al intentar eliminar el curso:', error);
+        showNotification('No se pudo eliminar el curso');
+      }
+
+
+
+
+      // 2. Feedback visual
+      showNotification('Elemento eliminado correctamente');
+
+      // 3. El total se actualizará a $0.00 automáticamente 
+      // porque htmlCart llama a calculateTotal
+      htmlCart();
+
+      console.log('Elemento borrado con exito!');
+
+    }
   }
 }
 
 // CLEAN CART
 function cleanCart() {
+  // 1. Preguntamos al usuario (UX Preventiva)
+  if (confirm('¿Estás seguro de que deseas vaciar todo el carrito?')) {
 
-  shoppingCart = [];    // Clean the array
-  cleanHTML();    // Clean the HTML
+    shoppingCart = [];    // Clean the array
+    cleanHTML();    // Clean the HTML
+    syncStorage();    // Display that all is ok
 
-  syncStorage();
-  console.log(shoppingCart);    // Display that all is ok
+    // 2. Feedback visual
+    showNotification('El carrito se ha vaciado correctamente');
+
+    // 3. El total se actualizará a $0.00 automáticamente 
+    // porque htmlCart llama a calculateTotal
+    htmlCart();
+
+    console.log('Carrito vaciado con éxito')
+  }
 }
 
 // * SPECIAL FUNCTIONS SECTION * 
 // * 1. Muestra el carrito de compras en el html
 function htmlCart() {
-
-
   try {
     cleanHTML();  // Limpia el HTML antes de repintar
     shoppingCart.forEach(course => {
@@ -142,8 +179,8 @@ function htmlCart() {
         <td> ${price}</td>
         <td> ${quantity}</td>
         <td> 
-            <a href="#" class = borrar-curso data-id="${id}"> X </a> 
-      `;
+            <button type="button" class = borrar-curso data-id="${id}"> X </button> 
+        </td> `;
 
       cartContainer.appendChild(row);
     });
@@ -189,7 +226,7 @@ function calculateTotal() {
     const numberPrice = parseFloat(course.price.replace('$', ''));
 
     // 2. Sumamos al acumulado: Precio * Cantidad
-    return sumarizedTotal + (price * course.quantity);
+    return sumarizedTotal + (numberPrice * course.quantity);
   }, 0);
 
   // 3. Mostramos el resultado en el HTML
@@ -201,3 +238,34 @@ function calculateTotal() {
     displayTotal.textContent = `$${TOTAL.toFixed(2)}`;
   }
 }
+
+// Muestra una notificación personalizada
+function showNotification(message) {
+  // 1. Crear el elemento
+  const notification = document.createElement('div');
+  notification.classList.add('vacio'); // Reutilizamos tu clase roja o creamos una nueva
+  notification.textContent = message;
+
+  // Estilos rápidos para que parezca un "Toast" flotante
+  notification.style.position = 'fixed';
+  notification.style.top = '20px';
+  notification.style.right = '20px';
+  notification.style.zIndex = '1000';
+  notification.style.backgroundColor = '#2ecc71'; // Verde éxito
+  notification.style.padding = '15px 30px';
+  notification.style.borderRadius = '5px';
+  notification.style.color = 'white';
+  notification.style.fontWeight = 'bold';
+  notification.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+
+  // 2. Insertar en el body
+  document.body.appendChild(notification);
+
+  // 3. Eliminar después de 2.5 segundos con una pequeña transición
+  setTimeout(() => {
+    notification.style.opacity = '0';
+    notification.style.transition = 'opacity 0.5s ease';
+    setTimeout(() => notification.remove(), 500);
+  }, 2500);
+}
+
